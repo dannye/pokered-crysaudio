@@ -48,9 +48,9 @@ _InitSound::
 	or d
 	jr nz, .clearaudio
 
-; channels 5 and 6
+; channels 5 and 6, and the saved custom music waveform
 	ld hl, wChannel5
-	ld de, CHANNEL_STRUCT_LENGTH * 2
+	ld de, CHANNEL_STRUCT_LENGTH * 2 + AUD3WAVE_SIZE
 .clearaudio2
 	xor a
 	ld [hli], a
@@ -475,19 +475,21 @@ UpdateChannels:
 .load_wave_pattern
 	push hl
 	ld a, [wCurTrackVolumeEnvelope]
-	and $f ; only 0-9 are valid
+	and $f ; only 0-15 are valid
+	ld hl, wMusicCustomWave
+	cp $f
+	jr z, .copy_wave_pattern ; instrument $f uses the saved custom waveform
 	ld l, a
 	ld h, 0
 	; hl << 4
-	; each wavepattern is $f bytes long
+	; each wavepattern is $10 bytes long
 	; so seeking is done in $10s
 rept 4
 	add hl, hl
 endr
 	ld de, WaveSamples
 	add hl, de
-	cp $f
-	jr z, .skip
+.copy_wave_pattern
 	; load wavepattern into rAUD3WAVE_0-rAUD3WAVE_F
 	ld a, [hli]
 	ldh [rAUD3WAVE_0], a
@@ -521,7 +523,6 @@ endr
 	ldh [rAUD3WAVE_E], a
 	ld a, [hli]
 	ldh [rAUD3WAVE_F], a
-.skip
 	pop hl
 	ld a, [wCurTrackVolumeEnvelope]
 	and $f0
@@ -1501,7 +1502,7 @@ MusicF2:
 MusicF3:
 ;custom waveform
 	ld e, AUD3WAVE_SIZE
-	ld hl, _AUD3WAVERAM
+	ld hl, wMusicCustomWave
 .read
 	call GetMusicByte
 	ld [hli], a

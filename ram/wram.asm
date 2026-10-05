@@ -1865,6 +1865,9 @@ UNION
 NEXTU
 wChannel5:: channel_struct wChannel5
 wChannel6:: channel_struct wChannel6
+; save the music waveform for instrument $f since it can be erased by channel 3 SFX
+wMusicCustomWave:: ds AUD3WAVE_SIZE
+	ASSERT @ - wChannel5 <= 128
 ENDU
 
 ; number of signs in the current map (up to MAX_BG_EVENTS)
